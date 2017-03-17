@@ -1,0 +1,42 @@
+/*
+* @Author: Nassicy
+* @Date:   2017-03-09 17:39:06
+* @Last Modified by:   Nassicy
+* @Last Modified time: 2017-03-10 16:08:09
+*/
+
+body,html{
+    line-height:1;
+    font-weight:200;
+    font-family:'PingFang SC','STHeitiSC-Light','Helvetical-Light', "Microsoft YaHei","WenQuanYi Micro Hei","tohoma,sans-serif",Helvetica,Arial;
+    -webkit-tap-highlight-color:transparent;
+     -webkit-font-smoothing: antialiased;
+}
+.clearfix{
+    display:inline-blcok;
+    &:after{
+        display:block;
+        height:0;
+        line-height:0;
+        clear:both;
+        visibility: hidden;
+        content:"";
+
+    }
+}
+@media(-webkit-min-device-pixel-ratio:1.5),(min-device-pixel-ratio:1.5){
+    border-px{
+        &::after{
+            -webkit-transform:scaleY(0.7);
+            transform:scaleY(0.7)
+        }
+    }
+}
+@media(-webkit-min-device-pixel-ratio:2),(min-device-pixel-ratio:2){
+    border-px{
+        &::after{
+            -webkit-transform:scaleY(0.5);
+            transform:scaleY(0.5)
+        }
+    }
+}
