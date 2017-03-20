@@ -1,5 +1,5 @@
 <template>
-  <div class="ratings-box">
+  <div class="ratings" v-el:ratings>
     <div class="rating-header">
         <div class="left">
             <h1 class="score">{{seller.score}}</h1>
@@ -35,7 +35,7 @@
             <ratingselect :select-type="selectType" :ratings="ratings" :only-content="onlyContent" :desc="desc"></ratingselect>
         </div>
         <ul>
-            <li v-for="rating in ratings" class="rating-item" >
+            <li v-for="rating in ratings" class="rating-item" v-show="needShow(rating.rateType,rating.text)">
                 <div class="user clearfix">
                     <div class="left">
                         <div class="avatar">
@@ -46,9 +46,9 @@
                             <span class="star-wrapper">
                                 <star :size="24" :score="rating.score"></star>
                             </span>
-                            <span class="time">{{rating.deliveryTime}}分钟送达</span>
+                            <span class="time" v-show="rating.deliveryTime">{{rating.deliveryTime}}分钟送达</span>
                         </div>
-                        <div class="date">{{rating.rateTime}}</div>
+                        <div class="date">{{rating.rateTime | formatDate}}</div>
                     </div>
                 </div>
                 <p class="content">{{rating.text}}</p>
@@ -63,10 +63,11 @@
 </template>
 
 <script type="text/ecmascript-6">
-   /*  import BScroll from 'better-scroll'; */
+    import BScroll from 'better-scroll';
     import split from 'components/split/split';
     import star from 'components/star/star';
     import ratingselect from 'components/ratingselect/ratingselect';
+    import {formatDate} from 'common/js/date';
     const ALL = 2;
     const ERR_OK = 0;
     export default{
@@ -89,17 +90,55 @@
         },
         created() {
             this.$http.get('/api/ratings').then((response) => {
-            response = response.body;
-            if (response.errno === ERR_OK) {
-                this.ratings = response.data;
-              }
+                response = response.body;
+                if (response.errno === ERR_OK) {
+                    this.ratings = response.data;
+                    this.$nextTick(() => {
+                        this.scroll = new BScroll(this.$els.ratings, {
+                            click: true
+                        });
+                    });
+                }
             });
+        },
+        filters: {
+            formatDate(time) {
+                let date = new Date(time);
+                return formatDate(date, 'yyyy-MM-dd hh:mm');
+            }
+        },
+        events: {
+          'ratingtype.select'(type) {
+            this.selectType = type;
+            this.$nextTick(() => {
+              this.scroll.refresh();
+            });
+          },
+          'content.toggle'(onlyContent) {
+            this.onlyContent = onlyContent;
+            this.$nextTick(() => {
+              this.scroll.refresh();
+            });
+          }
+        },
+        methods: {
+            needShow(type, text) {
+                if (this.onlyContent && !text) {
+                    return false;
+                }
+                if (this.selectType === ALL) {
+                    return true;
+                } else {
+                    return this.selectType === type;
+                }
+            }
+
         }
     };
 </script>
 <style lang="scss"  scoped>
     @import '../../common/scss/mixin';
-    .ratings-box{
+    .ratings{
         .rating-header{
             display:flex;
             padding:0.9rem 0;
@@ -174,8 +213,9 @@
             }
         }
         .rating-item{
+            padding:0.9rem;
+            @include border-px(rgba(7,17,27,0.1));
             .user{
-                padding:0.9rem;
                 position:relative;
                 .left{
                     float:left;
@@ -203,18 +243,13 @@
                             display:inline-block;
                         }
                         .time{
+                            margin-left:0.3rem;
                             font-size:0.5rem;
                             font-weight:200;
                             color:rgb(147,153,159);
                             line-height:0.6rem;
                         }
                     }
-                }
-                .content{
-                    margin:0.3rem 1.0rem 0.4rem 2.9rem;
-                    font-size:0.6rem;
-                    color:rgb(7,17,27);
-                    line-height:0.9rem;
                 }
                 .date{
                     position:absolute;
@@ -223,6 +258,41 @@
                     line-height:0.6rem;
                     font-weight:200;
                     color:rgb(147,153,159);
+                }
+            }
+            .content{
+                margin:0.3rem 1.0rem 0.4rem 2rem;
+                font-size:0.6rem;
+                color:rgb(7,17,27);
+                line-height:0.9rem;
+            }
+            .recommend{
+                font-size:0;
+                margin:0.4rem auto 0 2rem;
+                .icon-thumb_up{
+                    display:inline-block;
+                    vertical-align:middle;
+                    margin-right:0.4rem;
+                    color:rgb(0,160,220);
+                    font-size:0.6rem;
+                    line-height:0.8rem;
+                }
+                .item{
+                    display:inline-block;
+                    vertical-align:middle;
+                    margin-right:0.4rem;
+                    margin-bottom:0.2rem;
+                    padding:0.1rem 0.3rem;
+                    border:1px solid rgba(7,17,27,0.1);
+                    border-radius:0.05rem;
+                    background-color:#fff;
+                    font-size:0.45rem;
+                    color:rgb(147,153,159);
+                    line-height:0.8rem;
+                  /*   width:2.5rem;
+                    white-space:nowrap;
+                    text-overflow:ellipsis;
+                    overflow:hidden; */
                 }
             }
         }
