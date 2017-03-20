@@ -24,7 +24,8 @@ const ERR_OK = 0;
 export default{
   data() {
     return {
-      seller: {}
+      seller: {},
+      ratings: {}
     };
   },
   created() {
@@ -33,7 +34,6 @@ export default{
       if (response.errno === ERR_OK) {
         this.seller = response.data;
       }
-        console.log(this.seller);
     });
   },
 

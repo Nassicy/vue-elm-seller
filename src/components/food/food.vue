@@ -33,26 +33,54 @@
             <div class="ratings">
                 <h2 class="title title-common">商品评论</h2>
                 <div class="ratings-box">
-                    <ratingselect></ratingselect>
+                    <ratingselect :select-type="selectType" :only-content="onlyContent" :desc="desc" :ratings="food.ratings"></ratingselect>
+                </div>
+                <div class="rating-wrapper">
+                    <ul v-show="food.ratings && food.ratings.length">
+                        <li v-for="rating in food.ratings" class="rating-list border-px" v-show="needShow(rating.rateType,rating.text)">
+                            <div class="rating-header clearfix">
+                                <span class="date">{{rating.rateTime | formatDate}}</span>
+                                <div class="user-box">
+                                    <span class="name">{{rating.username}}</span>
+                                    <img :src="rating.avatar" alt="" class="avatar">
+                                </div>
+                            </div>
+                            <div class="rating-content">
+                                <span :class="{'icon-thumb_down':rating.rateType===1,'icon-thumb_up':rating.rateType===0}"></span>
+                                <span class="text">{{rating.text}}</span>
+                            </div>
+                        </li>
+                    </ul>
+                    <div class="no-ratings" v-show="!food.ratings || !food.ratings.length">暂无评价</div>
                 </div>
             </div>
         </div>
     </div>
 </template>
 <script type="text/ecmascript-6">
-import split from 'components/split/split';
-import cartcontrol from 'components/cartcontrol/cartcontrol';
-import shopcart from 'components/shopcart/shopcart';
-import ratingselect from 'components/ratingselect/ratingselect';
-import BScroll from 'better-scroll';
-import Vue from 'vue';
+    import split from 'components/split/split';
+    import cartcontrol from 'components/cartcontrol/cartcontrol';
+    import shopcart from 'components/shopcart/shopcart';
+    import ratingselect from 'components/ratingselect/ratingselect';
+    import {formatDate} from 'common/js/date';
+    import BScroll from 'better-scroll';
+    import Vue from 'vue';
+
+    const ALL = 2;
     export default {
         props: {
             food: Object
         },
         data() {
             return {
-                showFlag: false
+                showFlag: false,
+                selectType: ALL,
+                onlyContent: true,
+                desc: {
+                    all: '全部',
+                    positive: '推荐',
+                    negative: '吐槽'
+                }
             };
         },
         components: {
@@ -64,6 +92,8 @@ import Vue from 'vue';
         methods: {
             show() {
                 this.showFlag = true;
+                this.selectType = ALL;
+                this.onlyContent = true;
                 this.$nextTick(() => {
                     if (!this.scroll) {
                         this.scroll = new BScroll(this.$els.food, {
@@ -83,13 +113,43 @@ import Vue from 'vue';
                 }
                 Vue.set(this.food, 'count', 1);
                 this.$dispatch('cart.add', event.target);
+            },
+           needShow(type, text) {
+                if (this.onlyContent && !text) {
+                  return false;
+                }
+                if (this.selectType === ALL) {
+                  return true;
+                } else {
+                  return type === this.selectType;
+                }
+            }
+        },
+        events: {
+          'ratingtype.select'(type) {
+            this.selectType = type;
+            this.$nextTick(() => {
+              this.scroll.refresh();
+            });
+          },
+          'content.toggle'(onlyContent) {
+            this.onlyContent = onlyContent;
+            this.$nextTick(() => {
+              this.scroll.refresh();
+            });
+          }
+        },
+        filters: {
+            formatDate(time) {
+                let date = new Date(time);
+                return formatDate(date, 'yyyy-MM-dd hh:mm');
             }
         }
 
     };
 </script>
 <style lang="scss" scoped>
-@import '../../common/scss/mixin';
+    @import '../../common/scss/mixin';
     .food{
         position:fixed;
         top:0;
@@ -221,6 +281,62 @@ import Vue from 'vue';
         }
         .ratings{
             padding:0.9rem;
+            .rating-wrapper{
+                .rating-list{
+                    padding:0.8rem 0;
+                    @include border-px(rgba(7,17,27,0.1));
+                    &:last-child{
+                        @include border-none();
+                    }
+                    .rating-header{
+                        color:rgb(147,153,159);
+                        .date{
+                           display:inline-block;
+                           float:left;
+                           font-size:0.6rem;
+                           line-height:0.6rem;
+                        }
+                        .user-box{
+                            float:right;
+                            .name{
+                                font-size:0.5rem;
+                                line-height:0.6rem;
+                                margin-right:0.3rem;
+                                vertical-align:top;
+                            }
+                            .avatar{
+                                width:0.6rem;
+                                height:0.6rem;
+                                border-radius:50%;
+                            }
+                        }
+                    }
+                    .rating-content{
+                        margin-top:0.3rem;
+                        .icon-thumb_down{
+                            color:rgb(147,153,159);
+                            font-size:0.6rem;
+                            line-height:1.2rem;
+                        }
+                        .icon-thumb_up{
+                            color:rgb(0,160,220);
+                            font-size:0.6rem;
+                            line-height:1.2rem;
+                        }
+                        .text{
+                            margin-left:0.2rem;
+                            font-size:0.6rem;
+                            line-height:0.8rem;
+                            color:rgb(7,17,27);
+                        }
+                    }
+                }
+                .no-ratings{
+                   padding:0.8rem 0;
+                   font-size:0.6rem;
+                   color:rgb(147,153,159);
+                }
+            }
         }
     }
 </style>
